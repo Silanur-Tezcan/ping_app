@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Ping Kontrol Paneli</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: linear-gradient(to right, #fceabb, #f8b500);
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    form {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+    }
+    .url-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .url-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .status {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-left: 10px;
+    }
+    .green { background-color: #4CAF50; }
+    .red { background-color: #F44336; }
+  </style>
+</head>
+<body>
+  <h1>Dinamik Site Ping Paneli</h1>
+
+  <form id="urlForm">
+    <input type="text" id="urlInput" placeholder="Yeni dinamik site URL'si ekle..." required>
+    <button type="submit">Ekle</button>
+  </form>
+
+  <div class="url-list" id="urlList"></div>
+
+  <script>
+    const urlForm = document.getElementById("urlForm");
+    const urlInput = document.getElementById("urlInput");
+    const urlList = document.getElementById("urlList");
+
+    let urls = JSON.parse(localStorage.getItem("pingURLs") || "[]");
+
+    function saveURLs() {
+      localStorage.setItem("pingURLs", JSON.stringify(urls));
+    }
+
+    function createUrlItem(url) {
+      const item = document.createElement("div");
+      item.className = "url-item";
+
+      const label = document.createElement("span");
+      label.textContent = url;
+
+      const status = document.createElement("div");
+      status.className = "status";
+
+      item.appendChild(label);
+      item.appendChild(status);
+      urlList.appendChild(item);
+
+      return { status, label };
+    }
+
+    function pingURL(url, statusEl) {
+      fetch(url)
+        .then(() => {
+          statusEl.className = "status green";
+        })
+        .catch(() => {
+          statusEl.className = "status red";
+        });
+    }
+
+    function setupPingLoop() {
+      urlList.innerHTML = "";
+      urls.forEach(url => {
+        const { status, label } = createUrlItem(url);
+        pingURL(url, status);
+        setInterval(() => pingURL(url, status), 300000); // 5 dakika
+      });
+    }
+
+    urlForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const newUrl = urlInput.value.trim();
+      if (newUrl && !urls.includes(newUrl)) {
+        urls.push(newUrl);
+        saveURLs();
+        setupPingLoop();
+        urlInput.value = "";
+      }
+    });
+
+    setupPingLoop();
+  </script>
+</body>
+</html>
