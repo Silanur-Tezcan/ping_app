@@ -160,6 +160,32 @@
     });
 
     setupPingLoop();
+
+    function pingURL(url, statusEl) {
+  // Önce fetch ile dene
+  fetch(url, { mode: 'no-cors' })
+    .then(() => {
+      statusEl.className = "status green";
+    })
+    .catch(() => {
+      // Fetch başarısızsa iframe ile dene
+      const iframe = document.createElement("iframe");
+      iframe.src = url;
+      iframe.style.display = "none";
+      document.body.appendChild(iframe);
+
+      // 3 saniye sonra kontrol et
+      setTimeout(() => {
+        if (iframe.contentWindow) {
+          statusEl.className = "status green";
+        } else {
+          statusEl.className = "status red";
+        }
+        document.body.removeChild(iframe);
+      }, 3000);
+    });
+}
   </script>
 </body>
 </html>
+
