@@ -143,15 +143,21 @@
       return { status };
     }
 
-    function pingURL(url, statusEl) {
-      fetch(url)
-        .then(() => {
-          statusEl.className = "status green";
-        })
-        .catch(() => {
-          statusEl.className = "status red";
-        });
+async function pingURL(url, statusEl) {
+  const start = performance.now();
+  try {
+    const response = await fetch(url);
+    const duration = performance.now() - start;
+
+    if (response.ok && duration < 3000) {
+      statusEl.className = "status green";
+    } else {
+      statusEl.className = "status red";
     }
+  } catch {
+    statusEl.className = "status red";
+  }
+}
 
     function setupPingLoop() {
       urlList.innerHTML = "";
@@ -178,3 +184,4 @@
   </script>
 </body>
 </html>
+
