@@ -59,6 +59,18 @@
     .url-label {
       flex: 1;
       font-size: 15px;
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+    .url-label::before {
+      content: "🔗 ";
+      margin-right: 4px;
+    }
+    .url-label:hover {
+      color: #f8b500;
+      text-decoration: underline;
     }
     .status {
       width: 16px;
@@ -104,9 +116,12 @@
       const item = document.createElement("div");
       item.className = "url-item";
 
-      const label = document.createElement("span");
+      const label = document.createElement("a");
       label.className = "url-label";
-      label.textContent = url;
+      label.href = url.startsWith("http") ? url : `https://${url}`;
+      label.textContent = url.replace(/^https?:\/\//, "");
+      label.target = "_blank";
+      label.rel = "noopener noreferrer";
 
       const status = document.createElement("div");
       status.className = "status";
@@ -143,7 +158,7 @@
       urls.forEach(url => {
         const { status } = createUrlItem(url);
         pingURL(url, status);
-        setInterval(() => pingURL(url, status), 300000); // 5 dakika
+        setInterval(() => pingURL(url, status), 800000); // 5 dakika
       });
     }
 
@@ -160,32 +175,6 @@
     });
 
     setupPingLoop();
-
-    function pingURL(url, statusEl) {
-  // Önce fetch ile dene
-  fetch(url, { mode: 'no-cors' })
-    .then(() => {
-      statusEl.className = "status green";
-    })
-    .catch(() => {
-      // Fetch başarısızsa iframe ile dene
-      const iframe = document.createElement("iframe");
-      iframe.src = url;
-      iframe.style.display = "none";
-      document.body.appendChild(iframe);
-
-      // 3 saniye sonra kontrol et
-      setTimeout(() => {
-        if (iframe.contentWindow) {
-          statusEl.className = "status green";
-        } else {
-          statusEl.className = "status red";
-        }
-        document.body.removeChild(iframe);
-      }, 3000);
-    });
-}
   </script>
 </body>
 </html>
-
