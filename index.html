@@ -5,62 +5,85 @@
   <title>Ping Kontrol Paneli</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(to right, #fceabb, #f8b500);
-      padding: 20px;
+      padding: 30px;
       color: #333;
     }
     h1 {
       text-align: center;
+      margin-bottom: 30px;
     }
     form {
-      margin-bottom: 20px;
       display: flex;
       gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
     }
     input[type="text"] {
       flex: 1;
-      padding: 8px;
-      border-radius: 4px;
+      padding: 10px;
+      border-radius: 6px;
       border: 1px solid #ccc;
+      font-size: 16px;
     }
     button {
-      padding: 8px 12px;
+      padding: 10px 16px;
       border: none;
-      border-radius: 4px;
-      background-color: #444;
+      border-radius: 6px;
+      background-color: #333;
       color: white;
+      font-weight: bold;
       cursor: pointer;
     }
     .url-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
+      max-width: 600px;
+      margin: auto;
     }
     .url-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
       background: #fff;
-      padding: 10px;
-      border-radius: 6px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .url-item:hover {
+      transform: scale(1.01);
+    }
+    .url-label {
+      flex: 1;
+      font-size: 15px;
     }
     .status {
-      width: 20px;
-      height: 20px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
       margin-left: 10px;
     }
     .green { background-color: #4CAF50; }
     .red { background-color: #F44336; }
+    .delete-btn {
+      margin-left: 15px;
+      background-color: #F44336;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h1>Dinamik Site Ping Paneli</h1>
 
   <form id="urlForm">
-    <input type="text" id="urlInput" placeholder="Yeni dinamik site URL'si ekle..." required>
+    <input type="text" id="urlInput" placeholder="URL ekle (virgülle ayırarak birden fazla)" required>
     <button type="submit">Ekle</button>
   </form>
 
@@ -82,16 +105,27 @@
       item.className = "url-item";
 
       const label = document.createElement("span");
+      label.className = "url-label";
       label.textContent = url;
 
       const status = document.createElement("div");
       status.className = "status";
 
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.textContent = "Sil";
+      deleteBtn.onclick = () => {
+        urls = urls.filter(u => u !== url);
+        saveURLs();
+        setupPingLoop();
+      };
+
       item.appendChild(label);
       item.appendChild(status);
+      item.appendChild(deleteBtn);
       urlList.appendChild(item);
 
-      return { status, label };
+      return { status };
     }
 
     function pingURL(url, statusEl) {
@@ -107,7 +141,7 @@
     function setupPingLoop() {
       urlList.innerHTML = "";
       urls.forEach(url => {
-        const { status, label } = createUrlItem(url);
+        const { status } = createUrlItem(url);
         pingURL(url, status);
         setInterval(() => pingURL(url, status), 300000); // 5 dakika
       });
@@ -115,9 +149,10 @@
 
     urlForm.addEventListener("submit", e => {
       e.preventDefault();
-      const newUrl = urlInput.value.trim();
-      if (newUrl && !urls.includes(newUrl)) {
-        urls.push(newUrl);
+      const newUrls = urlInput.value.split(",").map(u => u.trim()).filter(u => u);
+      const uniqueNew = newUrls.filter(u => !urls.includes(u));
+      if (uniqueNew.length > 0) {
+        urls = [...urls, ...uniqueNew];
         saveURLs();
         setupPingLoop();
         urlInput.value = "";
