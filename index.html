@@ -2,32 +2,61 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ping Kontrol Paneli</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      margin: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.light {
       background: linear-gradient(to right, #fceabb, #f8b500);
-      padding: 30px;
       color: #333;
+    }
+    body.dark {
+      background: linear-gradient(to right, #2c3e50, #34495e);
+      color: #eee;
     }
     h1 {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .theme-toggle {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .theme-toggle button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #333;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
     }
     form {
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 20px;
       justify-content: center;
+      margin-bottom: 20px;
     }
     input[type="text"] {
-      flex: 1;
+      flex: 1 1 250px;
       padding: 10px;
       border-radius: 6px;
       border: 1px solid #ccc;
       font-size: 16px;
+      min-width: 200px;
     }
-    button {
+    button[type="submit"] {
       padding: 10px 16px;
       border: none;
       border-radius: 6px;
@@ -35,6 +64,7 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
+      flex-shrink: 0;
     }
     .url-list {
       display: flex;
@@ -45,6 +75,7 @@
     }
     .url-item {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       background: #fff;
@@ -53,16 +84,21 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       transition: transform 0.2s;
     }
+    body.dark .url-item {
+      background: #444;
+      color: #eee;
+    }
     .url-item:hover {
       transform: scale(1.01);
     }
     .url-label {
-      flex: 1;
+      flex: 1 1 auto;
       font-size: 15px;
       text-decoration: none;
-      color: #333;
+      color: inherit;
       font-weight: 500;
       transition: color 0.3s ease;
+      word-break: break-word;
     }
     .url-label::before {
       content: "🔗 ";
@@ -77,6 +113,7 @@
       height: 16px;
       border-radius: 50%;
       margin-left: 10px;
+      flex-shrink: 0;
     }
     .green { background-color: #4CAF50; }
     .red { background-color: #F44336; }
@@ -88,11 +125,26 @@
       border-radius: 4px;
       padding: 6px 10px;
       cursor: pointer;
+      flex-shrink: 0;
+    }
+    @media (max-width: 480px) {
+      .url-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .status, .delete-btn {
+        margin-left: 0;
+      }
     }
   </style>
 </head>
-<body>
+<body class="light">
   <h1>Dinamik Site Ping Paneli</h1>
+
+  <div class="theme-toggle">
+    <button id="toggleTheme">🌙 Dark Mode</button>
+  </div>
 
   <form id="urlForm">
     <input type="text" id="urlInput" placeholder="URL ekle (virgülle ayırarak birden fazla)" required>
@@ -105,6 +157,8 @@
     const urlForm = document.getElementById("urlForm");
     const urlInput = document.getElementById("urlInput");
     const urlList = document.getElementById("urlList");
+    const toggleBtn = document.getElementById("toggleTheme");
+    const body = document.body;
 
     let urls = JSON.parse(localStorage.getItem("pingURLs") || "[]");
 
@@ -143,21 +197,15 @@
       return { status };
     }
 
-async function pingURL(url, statusEl) {
-  const start = performance.now();
-  try {
-    const response = await fetch(url);
-    const duration = performance.now() - start;
-
-    if (response.ok && duration < 3000) {
-      statusEl.className = "status green";
-    } else {
-      statusEl.className = "status red";
+    function pingURL(url, statusEl) {
+      fetch(url)
+        .then(() => {
+          statusEl.className = "status green";
+        })
+        .catch(() => {
+          statusEl.className = "status red";
+        });
     }
-  } catch {
-    statusEl.className = "status red";
-  }
-}
 
     function setupPingLoop() {
       urlList.innerHTML = "";
@@ -180,8 +228,13 @@ async function pingURL(url, statusEl) {
       }
     });
 
+    toggleBtn.addEventListener("click", () => {
+      body.classList.toggle("dark");
+      body.classList.toggle("light");
+      toggleBtn.textContent = body.classList.contains("dark") ? "☀️ Light Mode" : "🌙 Dark Mode";
+    });
+
     setupPingLoop();
   </script>
 </body>
 </html>
-
